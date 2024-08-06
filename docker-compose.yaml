@@ -1,0 +1,39 @@
+services:
+  app:
+    container_name: "makves_app"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build: .
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=makves-test
+      - DB_NAME=makves-testdb
+    ports:
+      - "8084:8084"
+    networks:
+      - makves_network
+
+  postgres:
+    image: postgres:16.3-alpine3.20
+    container_name: "makves_postgres"
+    environment:
+      POSTGRES_DB: "makves-testdb"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "makves-test"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+    networks:
+      - makves_network
+networks:
+  makves_network:
